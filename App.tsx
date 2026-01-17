@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { Menu, X, Gavel, Brain, Shield, Rocket, CheckCircle, ChevronDown, MessageSquare, Quote, ChevronLeft, ChevronRight, Linkedin, Instagram } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatWidget } from './components/ChatWidget';
+import { EnrollmentModal } from './components/EnrollmentModal';
 import { CourseModules, FAQData, PricingPlans, TestimonialsData } from './constants';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openModuleIndex, setOpenModuleIndex] = useState<number | null>(0);
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
+  
+  // Modal State
+  const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
 
   const toggleModule = (index: number) => {
     setOpenModuleIndex(openModuleIndex === index ? null : index);
@@ -19,6 +24,11 @@ function App() {
       element.scrollIntoView({ behavior: 'smooth' });
       setIsMobileMenuOpen(false);
     }
+  };
+
+  const openEnrollment = (planName: string) => {
+    setSelectedPlan(planName);
+    setIsEnrollmentOpen(true);
   };
 
   const nextTestimonial = () => {
@@ -118,7 +128,7 @@ function App() {
               Domine as ferramentas que estão transformando o mercado jurídico. Automatize peças, analise jurisprudência em segundos e multiplique sua produtividade.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <button onClick={() => scrollToSection('pricing')} className="px-8 py-4 bg-yellow-500 text-slate-900 rounded-lg font-bold hover:bg-yellow-400 transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20">
+              <button onClick={() => openEnrollment('Interesse Geral (Hero)')} className="px-8 py-4 bg-yellow-500 text-slate-900 rounded-lg font-bold hover:bg-yellow-400 transition-all transform hover:scale-105 shadow-lg shadow-yellow-500/20">
                 Garantir minha vaga
               </button>
               <button onClick={() => scrollToSection('modulos')} className="px-8 py-4 bg-transparent border border-white/20 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors">
@@ -275,7 +285,10 @@ function App() {
                     </li>
                   ))}
                 </ul>
-                <button className={`w-full py-4 rounded-lg font-bold transition-transform ${plan.highlight ? 'bg-yellow-500 text-slate-900 hover:bg-yellow-400' : 'bg-slate-700 text-white hover:bg-slate-600'}`}>
+                <button 
+                  onClick={() => openEnrollment(plan.name)}
+                  className={`w-full py-4 rounded-lg font-bold transition-transform ${plan.highlight ? 'bg-yellow-500 text-slate-900 hover:bg-yellow-400' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                >
                   Começar Agora
                 </button>
               </motion.div>
@@ -435,6 +448,13 @@ function App() {
 
       {/* AI Chat Widget */}
       <ChatWidget />
+
+      {/* Enrollment Modal */}
+      <EnrollmentModal 
+        isOpen={isEnrollmentOpen} 
+        onClose={() => setIsEnrollmentOpen(false)} 
+        planName={selectedPlan}
+      />
     </div>
   );
 }
