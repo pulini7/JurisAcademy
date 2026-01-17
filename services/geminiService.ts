@@ -4,9 +4,9 @@ import { CourseModules, PricingPlans, FAQData, InstructorData } from "../constan
 let chatSession: Chat | null = null;
 
 // Initialize the API client
-// NOTE: In a real production app, ensure API_KEY is set in your environment variables.
-// For this demo, we assume process.env.API_KEY is available.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// NOTE: Safe access to process.env for browser environments without bundler injection
+const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
+const ai = new GoogleGenAI({ apiKey });
 
 const getSystemInstruction = () => {
     const modulesText = CourseModules.map(m => `- ${m.title}: ${m.lessons.join(', ')}`).join('\n');
