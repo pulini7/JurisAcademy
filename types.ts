@@ -6,6 +6,7 @@ export interface Module {
 export interface PricingPlan {
     name: string;
     price: string;
+    originalPrice?: string; // Novo campo para ancoragem
     features: string[];
     highlight?: boolean;
 }
@@ -27,4 +28,12 @@ export interface Testimonial {
     role: string;
     image: string;
     text: string;
+}
+
+export interface Instructor {
+    name: string;
+    role: string;
+    bio: string;
+    image: string;
+    achievements: string[];
 }

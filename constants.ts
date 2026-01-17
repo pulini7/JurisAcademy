@@ -1,4 +1,4 @@
-import { Module, PricingPlan, FAQItem, Testimonial } from './types';
+import { Module, PricingPlan, FAQItem, Testimonial, Instructor } from './types';
 
 export const CourseModules: Module[] = [
     {
@@ -126,6 +126,7 @@ export const CourseModules: Module[] = [
 export const PricingPlans: PricingPlan[] = [
     {
         name: "Essencial",
+        originalPrice: "997",
         price: "497",
         features: [
             "Acesso completo aos 15 módulos",
@@ -136,6 +137,7 @@ export const PricingPlans: PricingPlan[] = [
     },
     {
         name: "Pro + Mentoria",
+        originalPrice: "1.997",
         price: "997",
         highlight: true,
         features: [
@@ -163,7 +165,7 @@ export const FAQData: FAQItem[] = [
     },
     {
         question: "E se eu não gostar?",
-        answer: "Garantia incondicional de 7 dias. Se não for o que esperava, devolvemos 100% do seu investimento."
+        answer: "Garantia incondicional de 7 dias. Se não for o que esperava, devolvemos 100% do seu investimento sem burocracia."
     }
 ];
 
@@ -190,3 +192,17 @@ export const TestimonialsData: Testimonial[] = [
         text: "Estava com medo do futuro da profissão, mas o curso me mostrou como a tecnologia é uma aliada. Consegui um estágio incrível justamente por saber manusear LLMs para pesquisa jurídica."
     }
 ];
+
+export const InstructorData: Instructor = {
+    name: "Dr. Vitor Pastori Pulini",
+    role: "OAB/SP 460.464 | Especialista em Direito Digital",
+    // Imagem de placeholder neutro para substituição futura
+    image: "https://placehold.co/600x800/f1f5f9/94a3b8?text=Foto+do+Instrutor",
+    bio: "Advogado inscrito na OAB/SP sob o nº 460.464, Especialista em Direito Digital e Proteção de Dados. Pioneiro na aplicação prática de Inteligência Artificial na advocacia, ajudando escritórios a modernizarem seus processos com segurança e eficiência, sempre respeitando a ética e o sigilo profissional.",
+    achievements: [
+        "OAB/SP 460.464",
+        "Especialista em Proteção de Dados",
+        "Consultor de Inovação Jurídica",
+        "Advogado Digital"
+    ]
+};

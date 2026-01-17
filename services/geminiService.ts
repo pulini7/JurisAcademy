@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat } from "@google/genai";
-import { CourseModules, PricingPlans, FAQData } from "../constants";
+import { CourseModules, PricingPlans, FAQData, InstructorData } from "../constants";
 
 let chatSession: Chat | null = null;
 
@@ -18,6 +18,10 @@ const getSystemInstruction = () => {
     Seu objetivo é ajudar advogados e estudantes interessados no curso de Direito e Inteligência Artificial.
     
     ESTILO: Profissional, educado, persuasivo mas ético. Use emojis moderadamente ⚖️ 🤖.
+    
+    O PROFESSOR:
+    O curso é ministrado pelo ${InstructorData.name}, ${InstructorData.role}. Ele é ${InstructorData.bio}.
+    Destaque que ele une a visão jurídica com a técnica tecnológica.
     
     INFORMAÇÕES DO CURSO:
     

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CreditCard, Lock, Calendar, CheckCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { X, CreditCard, Lock, Calendar, CheckCircle, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 
@@ -14,6 +14,7 @@ interface PaymentModalProps {
 export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, planName, price, onPaymentSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  
   const [cardData, setCardData] = useState({
     number: '',
     name: '',
@@ -21,49 +22,130 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
     cvc: ''
   });
 
+  const [errors, setErrors] = useState({
+    number: '',
+    name: '',
+    expiry: '',
+    cvc: ''
+  });
+
+  const validateField = (name: string, value: string) => {
+    let error = '';
+    
+    switch (name) {
+      case 'number':
+        const cleanNumber = value.replace(/\s/g, '');
+        if (cleanNumber.length !== 16) {
+          error = 'Número do cartão incompleto.';
+        }
+        break;
+        
+      case 'expiry':
+        if (value.length !== 5) {
+          error = 'Data inválida.';
+        } else {
+          const [month, year] = value.split('/').map(Number);
+          const now = new Date();
+          const currentYear = Number(now.getFullYear().toString().slice(-2));
+          const currentMonth = now.getMonth() + 1;
+
+          if (!month || month < 1 || month > 12) {
+            error = 'Mês inválido.';
+          } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
+            error = 'Cartão vencido.';
+          }
+        }
+        break;
+        
+      case 'cvc':
+        if (value.length < 3) {
+          error = 'CVC incompleto.';
+        }
+        break;
+        
+      case 'name':
+        if (value.trim().length < 3) {
+          error = 'Insira o nome completo.';
+        }
+        break;
+    }
+
+    setErrors(prev => ({ ...prev, [name]: error }));
+    return error === '';
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    validateField(e.target.name, e.target.value);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
-    if (e.target.name === 'number') {
+    const name = e.target.name;
+
+    // Masking Logic
+    if (name === 'number') {
         value = value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
-    } else if (e.target.name === 'expiry') {
+    } else if (name === 'expiry') {
         value = value.replace(/\D/g, '').replace(/(.{2})/g, '$1/').slice(0, 5);
         if (value.endsWith('/')) value = value.slice(0, -1); 
-    } else if (e.target.name === 'cvc') {
+    } else if (name === 'cvc') {
         value = value.replace(/\D/g, '').slice(0, 3);
-    } else if (e.target.name === 'name') {
+    } else if (name === 'name') {
         value = value.toUpperCase();
     }
-    setCardData({ ...cardData, [e.target.name]: value });
+
+    setCardData({ ...cardData, [name]: value });
+    
+    // Clear error on change if it exists
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all fields before submission
+    const isNumberValid = validateField('number', cardData.number);
+    const isExpiryValid = validateField('expiry', cardData.expiry);
+    const isCvcValid = validateField('cvc', cardData.cvc);
+    const isNameValid = validateField('name', cardData.name);
+
+    if (!isNumberValid || !isExpiryValid || !isCvcValid || !isNameValid) {
+      return;
+    }
+
     setLoading(true);
 
     // Simulação de delay de processamento de pagamento
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     try {
-      // Atualiza os metadados do usuário para liberar o acesso
+      // 1. Verificar usuário atual
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+          // 2. Atualizar metadados no Supabase
           const { error } = await supabase.auth.updateUser({
             data: { has_access: true, plan: planName }
           });
           if (error) throw error;
+
+          // 3. CRÍTICO: Forçar atualização da sessão local para persistir o novo metadado (has_access)
+          await supabase.auth.refreshSession();
       }
 
       setLoading(false);
       setSuccess(true);
       
-      // Notifica o componente pai e fecha
+      // 4. Feedback e Redirecionamento
       setTimeout(() => {
-          onPaymentSuccess();
+          onPaymentSuccess(); // Chama a função do pai que redireciona para 'modulos'
           onClose();
           setSuccess(false);
           setCardData({ number: '', name: '', expiry: '', cvc: '' });
-      }, 2500);
+          setErrors({ number: '', name: '', expiry: '', cvc: '' });
+      }, 2000);
 
     } catch (error) {
       console.error("Erro no pagamento:", error);
@@ -73,6 +155,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
   };
 
   if (!isOpen) return null;
+
+  // Helper para classes de input
+  const getInputClass = (hasError: boolean) => `
+    w-full px-4 py-3 border rounded-lg outline-none transition-all font-mono
+    ${hasError 
+      ? 'border-red-500 focus:ring-2 focus:ring-red-200 bg-red-50 text-red-900 placeholder-red-300' 
+      : 'border-slate-300 focus:ring-2 focus:ring-slate-900'
+    }
+  `;
 
   return (
     <AnimatePresence>
@@ -102,8 +193,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
                     <CheckCircle className="h-10 w-10 text-green-600" />
                  </motion.div>
                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Pagamento Aprovado!</h3>
-                 <p className="text-slate-600">Seu acesso ao curso foi liberado.</p>
-                 <p className="text-sm text-slate-400 mt-4">Redirecionando...</p>
+                 <p className="text-slate-600">Seu acesso foi liberado com sucesso.</p>
+                 <div className="mt-6 flex items-center gap-2 text-yellow-600 font-medium animate-pulse">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Redirecionando para o curso...</span>
+                 </div>
              </div>
           ) : (
              <>
@@ -131,51 +225,60 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Número do Cartão</label>
                         <div className="relative">
-                            <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <CreditCard className={`absolute left-3 top-3.5 h-5 w-5 ${errors.number ? 'text-red-400' : 'text-slate-400'}`} />
                             <input 
                                 type="text" 
                                 name="number"
                                 placeholder="0000 0000 0000 0000"
-                                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-all font-mono"
+                                className={`${getInputClass(!!errors.number)} pl-10 pr-10`}
                                 value={cardData.number}
                                 onChange={handleInputChange}
+                                onBlur={handleBlur}
                                 required
                             />
+                            {errors.number && (
+                                <AlertCircle className="absolute right-3 top-3.5 h-5 w-5 text-red-500" />
+                            )}
                         </div>
+                        {errors.number && <p className="text-xs text-red-500 mt-1 font-medium">{errors.number}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Validade</label>
                             <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Calendar className={`absolute left-3 top-3.5 h-5 w-5 ${errors.expiry ? 'text-red-400' : 'text-slate-400'}`} />
                                 <input 
                                     type="text" 
                                     name="expiry"
                                     placeholder="MM/AA"
-                                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-all font-mono"
+                                    className={`${getInputClass(!!errors.expiry)} pl-10`}
                                     value={cardData.expiry}
                                     onChange={handleInputChange}
+                                    onBlur={handleBlur}
                                     maxLength={5}
                                     required
                                 />
                             </div>
+                            {errors.expiry && <p className="text-xs text-red-500 mt-1 font-medium">{errors.expiry}</p>}
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CVC</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Lock className={`absolute left-3 top-3.5 h-5 w-5 ${errors.cvc ? 'text-red-400' : 'text-slate-400'}`} />
                                 <input 
                                     type="text" 
                                     name="cvc"
                                     placeholder="123"
-                                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-all font-mono"
+                                    className={`${getInputClass(!!errors.cvc)} pl-10`}
                                     value={cardData.cvc}
                                     onChange={handleInputChange}
+                                    onBlur={handleBlur}
                                     maxLength={3}
                                     required
                                 />
                             </div>
+                            {errors.cvc && <p className="text-xs text-red-500 mt-1 font-medium">{errors.cvc}</p>}
                         </div>
                     </div>
 
@@ -185,11 +288,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
                             type="text" 
                             name="name"
                             placeholder="COMO ESTÁ NO CARTÃO"
-                            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition-all"
+                            className={`${getInputClass(!!errors.name)} font-sans`} // Name doesn't need mono font
                             value={cardData.name}
                             onChange={handleInputChange}
+                            onBlur={handleBlur}
                             required
                         />
+                         {errors.name && <p className="text-xs text-red-500 mt-1 font-medium">{errors.name}</p>}
                     </div>
 
                     <button 
