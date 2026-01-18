@@ -1,15 +1,15 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X, Gavel, Brain, Shield, Rocket, CheckCircle, ChevronDown, MessageSquare, Quote, ChevronLeft, ChevronRight, Linkedin, Instagram, Loader2, LogIn, Lock, Award, GraduationCap, Star, Clock, Zap, ArrowRight, PlayCircle, ShieldCheck, Search, HelpCircle, Timer, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HashRouter, useLocation, useNavigate } from 'react-router-dom';
 import { CourseModules, FAQData, PricingPlans, TestimonialsData, InstructorData } from './constants';
 import { supabase } from './lib/supabaseClient';
 
-// Lazy Load heavy components to improve Initial Page Load
-const ChatWidget = React.lazy(() => import('./components/ChatWidget').then(module => ({ default: module.ChatWidget })));
-const EnrollmentModal = React.lazy(() => import('./components/EnrollmentModal').then(module => ({ default: module.EnrollmentModal })));
-const LoginModal = React.lazy(() => import('./components/LoginModal').then(module => ({ default: module.LoginModal })));
-const PaymentModal = React.lazy(() => import('./components/PaymentModal').then(module => ({ default: module.PaymentModal })));
+// Importações estáticas para corrigir o erro de módulo dinâmico
+import { ChatWidget } from './components/ChatWidget';
+import { EnrollmentModal } from './components/EnrollmentModal';
+import { LoginModal } from './components/LoginModal';
+import { PaymentModal } from './components/PaymentModal';
 
 function JurisAcademyApp() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -1023,57 +1023,31 @@ function JurisAcademyApp() {
           </div>
       )}
 
-      {/* AI Chat Widget (Lazy Loaded) */}
-      <Suspense fallback={null}>
-        <ChatWidget />
-      </Suspense>
+      {/* AI Chat Widget (Static Import) */}
+      <ChatWidget />
 
-      {/* Enrollment Modal (Lazy Loaded) */}
-      <Suspense fallback={
-        isEnrollmentOpen ? (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
-             <Loader2 className="h-10 w-10 text-white animate-spin" />
-          </div>
-        ) : null
-      }>
-        <EnrollmentModal 
-            isOpen={isEnrollmentOpen} 
-            onClose={() => setIsEnrollmentOpen(false)} 
-            planName={selectedPlan}
-        />
-      </Suspense>
+      {/* Enrollment Modal (Static Import) */}
+      <EnrollmentModal 
+          isOpen={isEnrollmentOpen} 
+          onClose={() => setIsEnrollmentOpen(false)} 
+          planName={selectedPlan}
+      />
 
-      {/* Login Modal (Lazy Loaded) */}
-      <Suspense fallback={
-         isLoginOpen ? (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm">
-             <Loader2 className="h-10 w-10 text-white animate-spin" />
-          </div>
-         ) : null
-      }>
-        <LoginModal 
-            isOpen={isLoginOpen}
-            onClose={() => setIsLoginOpen(false)}
-            onLoginSuccess={handleLoginSuccess}
-        />
-      </Suspense>
+      {/* Login Modal (Static Import) */}
+      <LoginModal 
+          isOpen={isLoginOpen}
+          onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+      />
 
-      {/* Payment Modal (Lazy Loaded) */}
-      <Suspense fallback={
-         isPaymentOpen ? (
-          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
-             <Loader2 className="h-10 w-10 text-white animate-spin" />
-          </div>
-         ) : null
-      }>
-        <PaymentModal 
-            isOpen={isPaymentOpen}
-            onClose={() => setIsPaymentOpen(false)}
-            planName={selectedPlan}
-            price={selectedPrice}
-            onPaymentSuccess={handlePaymentSuccess}
-        />
-      </Suspense>
+      {/* Payment Modal (Static Import) */}
+      <PaymentModal 
+          isOpen={isPaymentOpen}
+          onClose={() => setIsPaymentOpen(false)}
+          planName={selectedPlan}
+          price={selectedPrice}
+          onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 }
