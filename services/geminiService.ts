@@ -3,9 +3,20 @@ import { CourseModules, PricingPlans, FAQData, InstructorData } from "../constan
 
 let chatSession: Chat | null = null;
 
-// Initialize the API client
-// NOTE: Safe access to process.env for browser environments without bundler injection
-const apiKey = (typeof process !== 'undefined' && process.env && process.env.API_KEY) ? process.env.API_KEY : '';
+// Inicializa a API Key com segurança
+// Verifica se 'process' existe antes de acessar para evitar erros em ambientes de navegador puro
+const getApiKey = () => {
+    try {
+        if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+            return process.env.API_KEY;
+        }
+    } catch (e) {
+        // Silencia erro se process não estiver definido
+    }
+    return '';
+};
+
+const apiKey = getApiKey();
 const ai = new GoogleGenAI({ apiKey });
 
 const getSystemInstruction = () => {
@@ -46,7 +57,7 @@ const getSystemInstruction = () => {
 export const getChatSession = (): Chat => {
     if (!chatSession) {
         chatSession = ai.chats.create({
-            model: 'gemini-3-flash-preview', // Using the fast model for chat interaction
+            model: 'gemini-3-flash-preview', // Modelo rápido para chat
             config: {
                 systemInstruction: getSystemInstruction(),
                 temperature: 0.7,

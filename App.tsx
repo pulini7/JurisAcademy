@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Gavel, Brain, Shield, Rocket, CheckCircle, ChevronDown, MessageSquare, Quote, ChevronLeft, ChevronRight, Linkedin, Instagram, Loader2, LogIn, Lock, Award, GraduationCap, Star, Clock, Zap, ArrowRight, PlayCircle, ShieldCheck, Search, HelpCircle, Timer, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HashRouter, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CourseModules, FAQData, PricingPlans, TestimonialsData, InstructorData } from './constants';
 import { supabase } from './lib/supabaseClient';
 
-// Importações estáticas para corrigir o erro de módulo dinâmico
+// Importações estáticas
 import { ChatWidget } from './components/ChatWidget';
 import { EnrollmentModal } from './components/EnrollmentModal';
 import { LoginModal } from './components/LoginModal';
 import { PaymentModal } from './components/PaymentModal';
 
-function JurisAcademyApp() {
+function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openModuleIndex, setOpenModuleIndex] = useState<number | null>(0);
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
@@ -1049,14 +1049,6 @@ function JurisAcademyApp() {
           onPaymentSuccess={handlePaymentSuccess}
       />
     </div>
-  );
-}
-
-function App() {
-  return (
-    <HashRouter>
-      <JurisAcademyApp />
-    </HashRouter>
   );
 }
 
